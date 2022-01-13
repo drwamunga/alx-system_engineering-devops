@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# This script displays certain categories in the /etc/passwd file.
-# Colon separated username, group id, and shell full path for user.
-while read line
+# Read and extract fields in file
+
+FILE="/etc/passwd"
+
+while read LINE
 do
-    echo "$line" | cut -d':' -f1,3,6
-done </etc/passwd
+    echo "$LINE" | cut -d ":" -f1,3,6
+done < "$FILE"
