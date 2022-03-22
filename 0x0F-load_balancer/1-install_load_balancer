@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
-# Configure server with: HAproxy version 1.5 or greater
-# Distributes request using roundrobin; sends traffic to servers: web-01 and web-02
-
-CFG="\\\nlisten appname 0.0.0.0:80\n\tmode http\n\tbalance roundrobin\n\toption httpclose\n\toption forwardfor\n\tserver 2050-web-01 104.196.56.190 check\n\tserver 2050-web-02 44.200.74.225 check\n"
-
+# Create a script to install and configure HAProxy on lb-01 server
+# Configure HAProxy to send traffic to web-01 and web-02 servers
+# Distribute requests using a roundrobin algorithm
+# Make sure that HAProxy can be managed via an init script
 sudo apt-get update
-sudo apt-get -y install nginx
-sudo apt-get install -y haproxy=1.5\*
+sudo apt-get install haproxy
+sudo sed -i 's/ENABLED=0/ENABLED=1/' /etc/default/haproxy
 
-# Make sure HAproxy can be managed via an init script
-sudo sed -i "s/ENABLED=0/ENABLED=1/" /etc/default/haproxy
+file=/etc/haproxy/haproxy.cfg
 
-# Backup original config file before attempt modifications
-sudo cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.backup
+sudo cp $file $file.copy
 
-# Configure to include roundrobin and two servers
-sudo sed -i "\$a $CFG" /etc/haproxy/haproxy.cfg
+sudo sed -i -e '$a\listen appname 0.0.0.0:80\n\tmode http\n\tstats enable' $file
+sudo sed -i -e '$a\\tbalance roundrobin\n\toption httpclose\n\toption forwardfor' $file
+sudo sed -i -e '$a\\tserver 2050-web-01 104.196.56.190:80\n\tserver 2050-web-02 44.200.74.225:80' $file
 
 sudo service haproxy start
